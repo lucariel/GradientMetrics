@@ -1,0 +1,39 @@
+Package: GradientMetrics
+Title: My take on the assignment
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Lucas",
+           family = "Enrich",
+           role = c("aut",'cre'),
+           email = "lucas.a.enrich@gmail.com",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: This package analyses the expermient and survey data.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Imports: 
+    devtools,
+    ggplot2,
+    tidyverse,
+    FactoMineR,
+    lattice,
+    broom,
+    sjPlot,
+    caret,
+    dplyr,
+    factoextra,
+    ggpubr,
+    rcompanion,
+    tidyr,
+    magrittr
+Suggests: 
+    knitr,
+    rmarkdown,
+    cluster,
+    caret,
+    reshape2
+VignetteBuilder: knitr
+Depends: 
+    R (>= 2.10)

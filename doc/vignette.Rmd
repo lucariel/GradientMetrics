@@ -1,0 +1,400 @@
+---
+title: "GradientMetrics-Vignette"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+source('script.R')
+```
+## Exploratory analysis.
+
+
+This is a first approach to the problem presented as a homework assignment. 
+
+The problem states that there is a add campaign, which has two parts. The experiment and the survey. The goal is to assess properly the results of the campaign and to make recommendation in regard which option is best to move forward. 
+
+The analysis must give insight about this.
+
+Another aspect of the variables to consider at this point is a first visual glance of the impact of each one in the answer. Since the "1" is half of the answers, I'll take a stratified sample of 1500 for each, and visualize, in a grid, which attribute for each variable has more positive answers.
+
+First, let's define the function:
+
+__ballon_plot('answer',*other*,experimient_data)__
+
+This constructs a Nx4 matrix, for $N$ different values the variable can take, and 4 different levels of the answer. The elements are the sum of answers for each level. Finally, plots a ballon plot of the same grid, in which the size of the plot corresponds with the value of the element. All the plots, corresponding to the stratified sample of the experimient data are stored in *plots_ball* list.
+
+Let's examine this plot for each varible of the experimient.
+
+### __Tasks__
+
+```{r}
+plots_ball[[1]]+coord_flip()+
+theme(axis.text.x = element_text(angle = 90, hjust=1),text = element_text(size=8))
+
+```
+
+Here we can see that the tasks $1$ and $6$ have the highest number of high answers. And $12$ has the highest number of low answers. The visual analysis, then, would suggest a weak correlation between $tasks$ and $answer$ since only $3$ out of $12$ tasks have a noticeable effect.
+
+
+The Cramer's V for this element is `r round(rcompanion::cramerV(as.factor(exp$answer),as.factor(exp$task),bias.correct = T),4)` which means the correlation between the answer and the response is small, which make sense given the visual analysis.
+
+
+There is no specification about what the variable means, so there are no further comments about this.
+
+### __Duration__
+
+```{r}
+plots_ball[[2]]+coord_flip()+
+theme(axis.text.x = element_text(angle = 90, hjust=1),text = element_text(size=8))
+```
+
+The visual analysis would suggest that there is a strong correlation between the answer and the duration, not only that, it would seem that, the longer the duration, the more likely is a high score in the answer.
+
+
+The Cramer's V for this element is `r round(rcompanion::cramerV(as.factor(exp$answer),as.factor(exp$duration), bias.correct=T),4)` which is slightly greater than the previous variable, so there is a not-zero association between this and the answer. This is useful information for modelling.
+
+### __Offer__
+
+```{r}
+plots_ball[[3]]+coord_flip()+
+theme(axis.text.x = element_text(angle = 90, hjust=1),text = element_text(size=8))
+```
+
+The visual analysis would suggest that there is not a very clear relationship between the score and offer, except when the offer is "improve your health in the long run".
+
+Cramer's V for this element is `r round(rcompanion::cramerV(as.factor(exp$answer),as.factor(exp$offer), bias.correct=T),4)` which would suggest no association between this variable and the answer. Which makes sense since the visual aid is telling us that only one of the options seems slightly correlated with the answer. 
+
+
+
+## __Outcome__
+
+```{r}
+plots_ball[[4]]+coord_flip()+
+theme(axis.text.x = element_text(angle = 90, hjust=1),text = element_text(size=8))
+```
+
+Here, the outcome which seems correlated with a high score is "breaking habits" and "changing mindset", in both cases the meaning of the phrase is to make a change, in how you do things, instead on who you are (which I would associate to "empowering you..."), which seems mostly random.
+
+The Cramer's V for this element is `r round(rcompanion::cramerV(as.factor(exp$answer),as.factor(exp$outcome), bias.correct=T),4)`, which is smaller than expected given the visual analysis, but still greater than zero, which means this could be a meaningful predictor.
+
+## __Price__
+
+```{r}
+plots_ball[[5]]+coord_flip()+
+theme(axis.text.x = element_text(angle = 90, hjust=1),text = element_text(size=8))
+```
+
+If I knew nothing of the data, I would say that lower prices are more likely to get a high answer. And the visual analysis confirms this.
+
+The Cramer's V for this element is  `r round(rcompanion::cramerV(as.factor(exp$answer),as.factor(exp$price), bias.correct=T),4)`, which means this is the stronger predictor one would expect to encounter while modelling.
+## __RTB__
+
+```{r}
+plots_ball[[6]]+coord_flip()+
+theme(axis.text.x = element_text(angle = 90, hjust=1),text = element_text(size=8))
+```
+
+Here, a specialized program would seem to indicate a better chance of giving a high score, the same is the case when we are talking about a "therapy", and people seem not really comfortable receiving a message every day from a coach. 
+
+Cramer's V is
+`r round(rcompanion::cramerV(as.factor(exp$answer),as.factor(exp$rtb), bias.correct=T),4)`, which makes this the second highest correlated variable so far, just behind price.
+
+
+```{r}
+plots_ball[[7]]+coord_flip()+
+theme(axis.text.x = element_text(angle = 90, hjust=1),text = element_text(size=8))
+
+```
+
+About the proof, if you tell people that other people use it (whether it's thousands or professional athletes), they seem less likely to give a high score, but if you tell them that it is scientifically proven they are more likely to recommend it.
+
+Cramer's V is `r round(rcompanion::cramerV(as.factor(exp$answer),as.factor(exp$social_proof), bias.correct=T),4)`, which is about the same as the previous.
+
+
+A contingent conclusion could be that the best predictors, using only this information are, in order:
+
+  + Price
+  
+  + Proof
+  
+  + RBT
+  
+  + Durations
+  
+  + Tasks
+  
+  + Outcome
+
+  + Offer  
+  
+
+
+## Variance Analysis
+
+On the other hand, I'll make sure that the distribution of different options doesn't have a pattern (this means that the experiment was, indeed, random). To do that I'll do a variance analysis, but since we are dealing with mostly categorical data, PCA is not the best suited tool, I'll use a Multi-Correspondence Analysis (MCA) which is like a Principal Component Analysis but it deals better with the one-hot encoding of the categorical variables.
+
+The function *get_MCA_plot(experimient)* takes as input the experimient data, makes the one hot encoding, performs the MCA analysis and returns a plot with the explain variance of each "principal component"
+
+```{r message=F, warning=F}
+get_MCA_plot(experiment)
+```
+
+It seems that the explained variance is evenly (uniformly) distributed, with and without adding the "answer". So it is quite random.
+
+
+
+## Modelling
+
+__The Survey Data__
+
+To begin the modelling, one could start by inquiring the data demographic data about potential groups of 
+people, to do that, I'll use a K-Means clustering.
+
+The first step towards clustering is to mesaure the distances between points, for that I'll use the euclidean distance.
+$$
+d(p,q) = \sqrt{\sum_{i=1}^n(q_i-p_i)^2}
+$$
+Which in this case is the dummified version of the demographic variables. This produces a $N\times N$ matrix with the distance from each point to the rest.
+
+With this distance I'll create two new variables:
+
+  + Cluster (K-Means)
+   
+  + Individuality (Principal Component Analysis)
+  
+*Cluster*
+
+```{r}
+kmplot+theme_cleveland()
+```
+
+Using the "elbow" method, the optimal $K \in \{3,4,5\}$. Since posterior analysis indicates that 5 groups are better for prediction, I'll keep that $k$.
+
+
+*Individuality*
+
+For this I'll use the distance matrix to get the first principal component of the variance of the distance, a mesaure which I'll call "Individuality" of the respondant.
+
+I'll only keep the first component because it explains almost 80% of the variance in distance.
+
+```{r}
+pca_plot
+```
+
+*Variable Selection*
+
+The survey data gives a glance of the profiles of the clients. But since there are so many, first it is necessary to reduce the variables to use. For which I'll use Cramer's V systematically, to know the intercorrelation between all of these variables, on the stratified sample mentioned earlier.
+
+To be selected a variable must comply with 3 criteria:
+
+  + More than 1 unique value.
+    
+  + Cramer's V greater than 0.2 
+    
+  + Be in the set of variables of interest (of the experiments)
+
+The 0.2 is an arbitrary value (functions as a hyperparameter) which can also be estimated programmatically, which can be done in a second stage. To do that is that the function *variable_selection_cramerV()* is about. 
+
+First, it is necessary to join the experiment data with the survey data and take the stratified sample. Next it calculates Cramer's for each element and filters according to the second parameter,which here is $0.2$, and mentioned criteria.
+
+
+```{r message=F, warning=F}
+knitr::opts_chunk$set(fig.width=14, fig.height=14) 
+knitr::kable(variable_selection_cramerV(survey_experiment,0.2))
+```
+
+__Cluster Characterization__
+
+
+Given 5 groups, let's see if there is some insight which might help us understand our population.
+
+
+```{r}
+gridExtra::grid.arrange(grobs=om_plots,nrow=6)
+```
+
+A few things about this:
+
+  + Group 1 is 100% hispanic, mostly urban, mostly male, fewer of the richest, more middle income, none retired. Name proposed: 
+  
+  + Group 2 is mostly sub-urban,50-50 in gender, is has the second-most more white population (with some African-American), has the most wealthy and oldest population.
+  
+  + Group 3 is the mostly female, the group with the greatest proportion of whites, if the previous group was the wealthiest, this is the most middle class, almost no low income respondants, almost no-from the south.A lot of young and older, but almost no middle-age.
+  
+  +Group 4 Youngest group,mostly from the west, mostly apolitical (other), the least income from the groups. Mostly hispanic and Asian, mostly urban.
+  
+  +Group 5: Mostly white and african-american (no other), middle income, the group with the most proportion of divorced (which is because, probably it also has the most middle-age)
+
+
+Lets see the composition of each group, for each relevant variable.
+
+First, the philosophy and attitudes variables.
+
+```{r}
+m1_philosophy_plot+ theme(legend.position="top")
+```
+
+Let's remember first which were the questions to talk about our groups:
+
+
+```{r}
+m1_philosophy[,1:9] %>% map_chr(attr_getter("label"))
+```
+
+Ok, what do we have here:
+
+  + Questions 1-3 are about confidence in science.
+  
+  + Question 4 is enviromental concerns
+  
+  + Question 5-8 is about health.
+  
+  + Question 9 is the state and regulations.
+  
+All in all, all groups are quite similiar (the difference it's assumed to come from other variables). However, what stands out is:
+
+  + Group 1 proclaims to be more enthusiastic about new products and have a great deal of confidence in science and the FDA.
+
+
+```{r}
+m2_attitudes_plot+ theme(legend.position="top")
+```
+
+Here, we have:
+
+```{r}
+knitr::opts_chunk$set(fig.width=4, fig.height=4)
+m2_attitudes[,1:9] %>% map_chr(attr_getter("label"))
+```
+
+As with philosophy, the attitudes are mostly consistent among all groups. But a few comments are in order:
+
+  +  Group 1 appears to be less extreme, with almost always has the biggest proportion of "Neither agree or desagree", and when it does have a big one, it's usually change by "Somewhat agree"; and having, usually, having the less proportion of "Strongly..."
+
+
+___RandomForest Multiclassfication__
+
+Finally, we can have a preliminary model of the answer which has a 67% accuracy on a test set using a randomForest model.
+
+randomForest allows us to know which are the best discriminatory variables.
+
+__Importance of Variables of interest (of experimient)__
+
+```{r message=F, warning=F}
+knitr::kable(vdf_experiment)
+```
+
+A negative value is considered a bad predictor. Se we can see, as expected, that the price is the best predictor of each category. "rbt" and "duration" is next to predict the high value of the answer. Contrary as expected, social_proof only has slightly positive predictive power only for moderate. The outcome only has importance when the answer is less than 4, and the task, whatever it is, is meaningless in every case. 
+
+____Importance of Variables of survey___
+
+Here, we can see that every of the survey variables are mostly similarly important
+
+```{r message=F, warning=F}
+vdf_survay
+```
+
+__Confusion Matrix__
+
+And an exam of the confusion matrix applied to the test set tells us that the model is fairly good in classification, and even the mistakes are close to the real value. When the reference is 1, the model is highly likely to predict 1 or, to a lesser extent, 2 and almost never predicts 3 or 4, the same thing happens when the reference is 4 (it almost never predicts 1). When it comes to 2 and 3, this also happens, but since they are not extreme values, the model confuses it more (albeit not much) 
+
+```{r message=F, warning=F}
+caret::confusionMatrix(predict(rfm_reg,test),as.factor(test$answer))
+```
+
+
+The randomForest shows promising results and it is better suited for multicategory output. But it doesn't tell us the direction of each one. Since the answer is numeric, we can run a linear regression on the data to get the value of the coefficients.
+
+__The linear model__
+
+What the previous analysis provided was insight about which variables are important, but it had little to say about what course of action to recommend. The linear model has that benefit, it provides a sign (positive or negative) for each value the variable can take, and it is possible to descart some values if they are proven insignificant.
+
+```{r results='asis'}
+sjPlot::tab_model(linear_model)
+```
+
+First, let's check the residuals, to make sure they are normal with $0$ mean.
+```{r message=FALSE, warning=FALSE}
+hist(linear_model$residuals)
+```
+
+Now, for the positive/negative impact of each level of the variables:
+
+ + Price
+ 
+    + The higher the price, the less likely to recommend.
+ 
+ + Proof
+ 
+    + Only scientific
+evidence is significant, and it's positive, so this is the best option. 
+ 
+ + RBT
+ 
+    + The regression model confirms that the message of a coach is not wanted. Also we learnt that the support is also badly received.
+ 
+ + Durations
+ 
+    + A year is the baseline here, and every other option has a negative effect on the score.
+ 
+ + Tasks
+ 
+    + Is numeric and not significant, which coincides with the randomForest analysis, which said it has no predictive value.
+ 
+ + Outcome
+ 
+    + As previously thought, the "empowering" is bad and statistically significant.
+
+ + Offer
+ 
+    + All options appear to be statistically insignificant, nonetheless every option apart the baseline ("give you energy") worsens the answer.
+
+
+
+Finally, one could use the insights here provided to better the add campaign. To predict, I would use a variation of the randomForest model (a classification model) instead of a linear model (a regression model)
+
+## Beyond the first glance:
+
+__Linear Models for Cluster__
+
+```{r warning=FALSE, results='asis'}
+sjPlot::tab_model(fitted_models_by_cluster$model)
+```
+
+Analize each model taking in consideration the description of each group.
+
+A few comments about the cluster dependent linear model:
+
+  + The duration is of little relevance to the hispanic-urban (group 1), whereas it's important for the old-rich (group 2)
+  
+  +The women's group (group 3), is the one in which the offer is most significant, and the ones which respond the most if the social_proof is scientific evidence.
+  
+  +Groups respond differently to prices. Group 4 is the one that responds more negatively to an increase in prices, and Group 5 is the one that responds less negatively to increase in price (group 5 is the middle-age group)
+  
+  
+
+__Binary Forest__
+
+To transform the target variable into a binary: if the answer is good (3 ó 4), or bad (1,2). 
+
+good = 1
+bad = 0.
+
+This removes ambiguity and allows for a better performing model.
+
+```{r message=F, warning=F}
+cmTest2
+```
+
+__Further work__
+ 
+
+ + Adjust the variable selection optimizing the Cramer's V (hyperparameter) cut-off 
+ 
+ + Using more powerful models (Neural Networks, LightGBM)
+ 
+ + Select a different metric (which interests the most: the recall, the accuracy, maybe the ROC curve?)
