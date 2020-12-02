@@ -1,12 +1,12 @@
 #Gradient HW
+library(GradientMetrics)
 library(cluster)
 library(caret)
 library(reshape2)
 library(tidyverse)
-source('../R/exploratory.R')
-source('../R/model.R')
 library(ggpubr)
 library(factoextra)
+
 
 
 experiment<-haven::read_sav('../data-raw/experiment_data.sav') %>% as_factor()
