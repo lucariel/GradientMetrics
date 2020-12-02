@@ -4,10 +4,10 @@ The interview's homework for Gradient Metrics.
 It can be installed by:
 
 `
-devtools::install_github('lucariel/gradientMetricHW')
+devtools::install_github('lucariel/GradientMetrics')
 `
 
-Check __./vignettes/readMeR.html__ for the preliminar analysis and __./vignettes/script.R__ for the use example.
+Check __./doc/vignette.html__ for the preliminar analysis and __./vignettes/script.R__ for the use example.
 
 The functions of this package are:
 
