@@ -77,11 +77,11 @@ other['cluster']<-survet$cluster
 
 
 
-m1_philosophy_plot<-get_cluster_categorical_plot(m1_philosophy,9)
-m2_attitudes_plot<-get_cluster_categorical_plot(m2_attitudes,11)
+m1_philosophy_plot<-GradientMetrics::get_cluster_categorical_plot(m1_philosophy,9)
+m2_attitudes_plot<-GradientMetrics::get_cluster_categorical_plot(m2_attitudes,11)
 
 other<-other %>% dplyr::select(-weights)
-om<-get_cluster_categorical_plot(other,17,F)
+om<-GradientMetrics::get_cluster_categorical_plot(other,17,F)
 om$value=gsub("\\s*\\([^\\)]+\\)","",as.character(om$value))
 
 om_plots<-list()
@@ -95,8 +95,9 @@ for(i in unique(om$variable)){
   j=j+1
 }
 
-
 survey_experiment<-GradientMetrics::survey_experiment
+survey_experiment<-right_join(survet,survey_experiment)
+
 survey_experiment<-survey_experiment %>%
   select_if(~ !any(is.na(.)))%>% select(where(~length(unique(.)) > 1))
 
