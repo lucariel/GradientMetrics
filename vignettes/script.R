@@ -1,6 +1,7 @@
 #Gradient HW
 library(GradientMetrics)
 library(cluster)
+library(lattice)
 library(caret)
 library(reshape2)
 library(tidyverse)
@@ -24,8 +25,7 @@ MCA_plot=get_MCA_plot(experiment)
 
 
 ##Get the stratified sample
-exp<-experiment  %>% group_by(answer) %>%
-  sample_n(1500) %>% ungroup()
+exp<- GradientMetrics::stratified_experimient
 
 
 exp<-exp %>% dplyr::select(-response_id)
@@ -66,7 +66,7 @@ survet['pca1']<-res.pca$x[,1]
 par(mar=c(1,1,1,1))
 pca_plot = fviz_eig(res.pca)
 
-m2_attitudes<-select(survet,contains("m2_attitudes"))
+m2_attitudes<-dplyr::select(survet,contains("m2_attitudes"))
 m2_attitudes['cluster']<-survet$cluster
 m1_philosophy<-select(survet,contains("m1_philosophy"))
 m1_philosophy['cluster']<-survet$cluster
@@ -75,17 +75,6 @@ other<-survet %>% dplyr::select(!c('cluster','pca1','response_id',colnames(m2_at
 other$weights<-as.numeric(other$weights)
 other['cluster']<-survet$cluster
 
-
-
-get_cluster_categorical_plot<-function(df,n,plot=T){
-  df_m <- melt(df,measure.vars=colnames(df)[1:n]) %>% as_tibble()%>%count(cluster, variable, value)
-  if(plot){
-  df_m  %>%
-    ggplot(aes(x=cluster,y=n,fill=value))+
-    geom_bar(position="fill", stat="identity")+
-    facet_wrap(~variable)}
-  else{df_m}
-}
 
 
 m1_philosophy_plot<-get_cluster_categorical_plot(m1_philosophy,9)
@@ -105,9 +94,9 @@ for(i in unique(om$variable)){
   om_plots[[j]]=pl
   j=j+1
 }
-om_plots[[3]]
 
-survey_experiment<-right_join(experiment,survet)
+
+survey_experiment<-GradientMetrics::survey_experiment
 survey_experiment<-survey_experiment %>%
   select_if(~ !any(is.na(.)))%>% select(where(~length(unique(.)) > 1))
 
@@ -140,9 +129,8 @@ cmTest = caret::confusionMatrix(predict(rfm_reg,test),test$answer)
 train$answer<-as.numeric(train$answer)
 linear_model <- lm(answer~.,train)
 
-
-f1 = formula(paste0("answer~",paste0(colnames(train)[2:21], collapse = "+")))
-train %>% group_by(cluster) %>% count()
+vars_formula = colnames(train)[!colnames(train)%in%c("answer",'cluster')]
+f1 = formula(paste0("answer~",paste0(vars_formula, collapse = "+")))
 fitted_models_by_cluster = train %>% group_by(cluster) %>%
   do(model = glm(f1, data = .))
 
