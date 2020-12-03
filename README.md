@@ -31,3 +31,13 @@ Which requeries three arguments:
   + a,b : variables to make the frequency grid
   + exp: dataframe of experimient which contains the variables "a" and "b"
 
+`
+get_cluster_categorical_plot(df,n,plot=T)
+`
+
+Which requeries three arguments:
+
+  + d : A DataFrame, must contain "cluster" as last column
+  + n: A integer, max value is [length(colnames(df))-1]. First "n" columns to plot
+  + plot: boolean, wether to plot or return a the source data.frame
+
