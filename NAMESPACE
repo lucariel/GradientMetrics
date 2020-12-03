@@ -3,3 +3,4 @@
 export(ballon_plot)
 export(get_MCA_plot)
 export(variable_selection_cramerV)
+importFrom(magrittr,"%>%")
