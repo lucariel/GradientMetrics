@@ -61,3 +61,47 @@ ballon_plot<-function(a,b,exp){
     ggplot2::scale_fill_viridis_c(option = "C")+ ggplot2::theme(legend.position = "none")
 }
 
+
+
+#' Title
+#'
+#' @param df A DataFrame, must contain "cluster" as last column
+#' @param n A integer, max value is [length(colnames(df))-1]. First "n" columns to plot
+#' @param plot boolean, wether to plot or return a data.frame
+#'
+#'
+#' @examples
+#'clusters = c(rep(x = 1,round(runif(1)*100,0)),rep(x = 2,round(runif(1)*100,0)),rep(x = 3,round(runif(1)*100,0)))
+#'prop_a = runif(3)
+#'share_prop_a = prop/sum(prop)
+#'a = c(rep('blue',round(length(clusters)*share_prop_a[1])),rep('red',round(length(clusters)*share_prop_a[2])),rep('yellow',round(length(clusters)*share_prop_a[3])))
+
+#'prop_b = runif(5)
+#'share_prop_b = prop_b/sum(prop_b)
+#'b = c(rep('hat',round(length(clusters)*share_prop_b[1])),
+#'      rep('red',round(length(clusters)*share_prop_b[2])),
+#'      rep('shirt',round(length(clusters)*share_prop_b[3])),
+#'      rep('pants',round(length(clusters)*share_prop_b[4])),
+#'      rep('cup',round(length(clusters)*share_prop_b[5]))
+#')
+#'a=a[1:length(clusters)]
+#'b=b[1:length(clusters)]
+#'
+#'df=data.frame(
+#'  a=a,
+#'  b=b,
+#'  cluster = clusters
+#'
+#')
+#'get_cluster_categorical_plot(df,2,T)
+#'
+#' @export
+get_cluster_categorical_plot<-function(df,n,plot=T){
+  df_m <- melt(df,measure.vars=colnames(df)[1:n]) %>% as_tibble()%>%count(cluster, variable, value)
+  if(plot){
+    df_m  %>%
+      ggplot(aes(x=cluster,y=n,fill=value))+
+      geom_bar(position="fill", stat="identity")+
+      facet_wrap(~variable)}
+  else{df_m}
+}
